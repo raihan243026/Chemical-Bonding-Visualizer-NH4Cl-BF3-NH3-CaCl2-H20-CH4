@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Bonding Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+
+        /* Custom Styles for Atoms and Bonds */
+        .atom {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 700;
+            color: white;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .atom:hover {
+            transform: scale(1.05);
+        }
+
+        /* Atom Colors and Sizes */
+        .atom-N { background-color: #4a5568; width: 60px; height: 60px; font-size: 1.25rem; }
+        .atom-H { background-color: #38a169; width: 40px; height: 40px; font-size: 1rem; }
+        .atom-Cl { background-color: #e53e3e; width: 60px; height: 60px; font-size: 1.25rem; }
+        .atom-Ca { background-color: #3182ce; width: 60px; height: 60px; font-size: 1.25rem; }
+        .atom-O { background-color: #9f7aea; width: 60px; height: 60px; font-size: 1.25rem; }
+        .atom-C { background-color: #dd6b20; width: 60px; height: 60px; font-size: 1.25rem; }
+        .atom-B { background-color: #d69e2e; width: 60px; height: 60px; font-size: 1.25rem; }
+        .atom-F { background-color: #48bb78; width: 40px; height: 40px; font-size: 1rem; }
+
+        /* Charge Indicators */
+        .charge-plus, .charge-minus {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .charge-plus { background: #f6ad55; }
+        .charge-minus { background: #e53e3e; }
+        .charge-plus-large {
+            font-size: 1.5rem;
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            padding: 0 4px;
+            background: #f6ad55;
+            border-radius: 0.375rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Bond Colors */
+        .bond-covalent { border-color: #4c7cff !important; } /* Blue */
+        .bond-ionic { border-color: #f6ad55 !important; } /* Orange */
+        .bond-coordinate { border-color: #38a169 !important; } /* Green */
+
+        /* Animation Keyframes for Ionic Pulse */
+        @keyframes ionicTransfer {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .animate-pulse-effect {
+            animation: ionicTransfer 1.5s infinite alternate;
+        }
+
+        /* Atom Position Utilities */
+        .p-relative { position: relative; }
+        .p-abs { position: absolute; }
+
+        /* Video Placeholder Styling */
+        .video-placeholder {
+            background-color: #e2e8f0;
+            background-image: url("https://placehold.co/600x338/5a67d8/ffffff?text=Video+Explanation+in+Bangla");
+            background-size: cover;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .video-placeholder::after {
+            content: '▶';
+            color: white;
+            font-size: 4rem;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+        .video-placeholder:hover::after {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-4 md:p-8">
+
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2">Molecular Bonding Structure Visualizer</h1>
+            <p class="text-md sm:text-xl text-gray-600">Explore the different types of bonds present in common chemical compounds.</p>
+        </header>
+
+        <!-- Compound Selection Buttons -->
+        <div id="compound-buttons" class="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8 p-3 bg-white rounded-xl shadow-lg">
+            <!-- Buttons will be generated here by JS -->
+        </div>
+
+        <!-- Main Content Area: Visualization + Details (Responsive Grid) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Visualization Area (Col 1/3) -->
+            <div id="visualizer-area" class="min-h-[350px] bg-white p-4 sm:p-6 rounded-xl shadow-2xl flex flex-col justify-center items-center text-center transition-all duration-300 lg:col-span-2">
+                <h2 class="text-2xl sm:text-3xl font-bold text-gray-700 mb-4">Select a Compound Above</h2>
+                <p class="text-gray-500">The animated structure, bond types, and explanation will appear here.</p>
+            </div>
+
+            <!-- Description and Video Area (Col 2/3) -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Detailed Description Card -->
+                <div id="description-card" class="bg-indigo-50 p-4 sm:p-6 rounded-xl shadow-inner border border-indigo-200">
+                    <h3 class="text-xl font-bold text-indigo-700 mb-3 border-b pb-2">Compound Details</h3>
+                    <p id="compound-description" class="text-gray-700 text-sm sm:text-base">Details about the selected compound's geometry, polarity, and octet rules will be displayed here.</p>
+                </div>
+
+                <!-- Mock Video Player Card -->
+                <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 border-b pb-2">Video Explanation</h3>
+                    <div id="video-mock" class="video-placeholder w-full aspect-video">
+                        <div class="absolute inset-0 bg-black bg-opacity-30 flex flex-col items-center justify-center p-4">
+                            <span class="text-4xl text-white mb-2">▶</span>
+                            <p class="text-white font-bold text-lg text-center">Tap to play (Mock Video in Bangla Voice)</p>
+                            <p class="text-gray-300 text-sm text-center mt-1">Explaining chemical bonding concepts clearly in Bengali (Bangla).</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const COMPOUNDS_DATA = [
+            {
+                formula: "NH4Cl", name: "Ammonium Chloride",
+                bonds: [
+                    { type: "Covalent", color: "#4c7cff", explanation: "Sharing of electrons (N and H)" },
+                    { type: "Coordinate Covalent", color: "#38a169", explanation: "N donates both electrons to H+" },
+                    { type: "Ionic", color: "#f6ad55", explanation: "Electrostatic attraction between NH4+ and Cl-" }
+                ],
+                description: "This compound is unique as it contains all three bond types. The Ammonium ion ($\text{NH}_4^+$) is a polyatomic cation with a **tetrahedral** geometry ($109.5^\circ$) due to the nitrogen atom having no lone pairs. The overall structure is an ionic crystal lattice held together by strong **ionic forces**.",
+                structureHTML: renderNH4Cl
+            },
+            {
+                formula: "CaCl2", name: "Calcium Chloride",
+                bonds: [{ type: "Ionic", color: "#f6ad55", explanation: "Transfer of electrons from Ca to Cl" }],
+                description: "A classic **ionic** compound. Calcium (a metal) transfers its two valence electrons to two Chlorine atoms (non-metal), forming $\text{Ca}^{2+}$ and $\text{Cl}^-$ ions. The strong electrostatic forces hold the crystalline lattice together. High melting point is characteristic.",
+                structureHTML: renderCaCl2
+            },
+            {
+                formula: "BF3", name: "Boron Trifluoride",
+                bonds: [{ type: "Covalent", color: "#4c7cff", explanation: "Boron shares electrons with three Fluorine atoms" }],
+                description: "A **covalent** molecule. Boron is an exception to the octet rule, only having **six valence electrons** (electron deficient). The geometry is **trigonal planar** with bond angles of $120^\circ$. Due to its perfect symmetry, the molecule is **non-polar**.",
+                structureHTML: renderBF3
+            },
+            {
+                formula: "NH3", name: "Ammonia",
+                bonds: [{ type: "Covalent", color: "#4c7cff", explanation: "Nitrogen shares electrons with three Hydrogen atoms (1 lone pair)" }],
+                description: "A **covalent** molecule. The Nitrogen atom has **three bonding pairs** and **one lone pair** of electrons. This lone pair repels the bonding pairs, giving the molecule a **trigonal pyramidal** geometry with a bond angle of approximately $107^\circ$. It is a **polar** molecule.",
+                structureHTML: renderNH3
+            },
+            {
+                formula: "H2O", name: "Water",
+                bonds: [{ type: "Covalent", color: "#4c7cff", explanation: "Oxygen shares electrons with two Hydrogen atoms (2 lone pairs)" }],
+                description: "A highly significant **covalent** molecule. The Oxygen atom has **two bonding pairs** and **two lone pairs**. These lone pairs push the hydrogen atoms closer together, resulting in a **bent** (V-shaped) geometry with a bond angle of approximately $104.5^\circ$. It is highly **polar**.",
+                structureHTML: renderH2O
+            },
+            {
+                formula: "CH4", name: "Methane",
+                bonds: [{ type: "Covalent", color: "#4c7cff", explanation: "Carbon shares electrons with four Hydrogen atoms" }],
+                description: "A simple **covalent** hydrocarbon. Carbon follows the octet rule by forming **four single covalent bonds** with Hydrogen. It exhibits perfect **tetrahedral** geometry with $109.5^\circ$ bond angles. Due to its symmetric structure, it is a **non-polar** molecule.",
+                structureHTML: renderCH4
+            },
+        ];
+
+        const visualizerArea = document.getElementById('visualizer-area');
+        const buttonContainer = document.getElementById('compound-buttons');
+        const compoundDescription = document.getElementById('compound-description');
+        let activeCompound = null;
+
+        // --- Bonding Visualization Functions (Returns HTML string) ---
+
+        function renderBondLegend(bonds) {
+            return bonds.map(bond => `
+                <div class="flex items-center space-x-2">
+                    <span class="w-4 h-4 rounded-full shadow-md" style="background-color: ${bond.color};"></span>
+                    <span class="text-sm sm:text-base text-gray-600 font-semibold">${bond.type}</span>
+                    <span class="text-xs text-gray-500 hidden md:inline">(${bond.explanation})</span>
+                </div>
+            `).join('');
+        }
+
+        // 1. NH4Cl (Complex: Ionic, Covalent, Coordinate)
+        function renderNH4Cl() {
+            return `
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-8 md:space-y-0 md:space-x-16 p-4">
+                    <!-- NH4+ Ion (Tetrahedral Covalent/Coordinate Core) -->
+                    <div class="p-relative w-48 h-48 flex items-center justify-center border-4 border-dashed border-gray-300 rounded-3xl shadow-inner bg-gray-50">
+                        <div class="atom atom-N">N</div>
+                        <div class="charge-plus-large text-xl bg-orange-500 shadow-lg">+</div>
+                        <!-- Covalent Bonds (Blue) -->
+                        <div class="atom atom-H p-abs bond-covalent" style="top: 10px; left: 20px; border: 2px solid;">H</div>
+                        <div class="atom atom-H p-abs bond-covalent" style="top: 20px; right: 20px; border: 2px solid;">H</div>
+                        <div class="atom atom-H p-abs bond-covalent" style="bottom: 20px; left: 20px; border: 2px solid;">H</div>
+                        <!-- Coordinate Bond (Green) -->
+                        <div class="atom atom-H p-abs bond-coordinate" style="bottom: 10px; right: 20px; border: 2px solid;">H</div>
+                        <div class="text-xs font-bold text-gray-500 absolute -top-5">Covalent & Coordinate Bonds</div>
+                    </div>
+
+                    <!-- Ionic Bond Line (Orange) -->
+                    <div class="text-center flex flex-col items-center justify-center">
+                        <svg class="w-20 h-20 md:w-28 md:h-28 animate-pulse-effect" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 50 C 30 20, 70 20, 90 50 C 70 80, 30 80, 10 50 Z" stroke="#f6ad55" stroke-width="4" fill="none"/>
+                            <text x="50" y="55" font-family="Inter" font-size="12" fill="#dd6b20" text-anchor="middle" font-weight="bold">IONIC</text>
+                        </svg>
+                    </div>
+                    
+                    <!-- Cl- Ion -->
+                    <div class="atom atom-Cl animate-pulse-effect">Cl<div class="charge-plus charge-minus">-</div></div>
+                </div>
+            `;
+        }
+
+        // 2. CaCl2 (Ionic)
+        function renderCaCl2() {
+            return `
+                <div class="flex flex-col md:flex-row items-center justify-center space-y-8 md:space-y-0 md:space-x-12 p-4">
+                    <!-- Cl- Ion 1 -->
+                    <div class="atom atom-Cl animate-pulse-effect">Cl<div class="charge-plus charge-minus">-</div></div>
+
+                    <!-- Ca2+ Ion -->
+                    <div class="atom atom-Ca">Ca<div class="charge-plus-large">2+</div></div>
+
+                    <!-- Cl- Ion 2 -->
+                    <div class="atom atom-Cl animate-pulse-effect">Cl<div class="charge-plus charge-minus">-</div></div>
+                    
+                    <div class="text-sm font-bold text-gray-500 absolute top-5">Electrons are TRANSFERRED, resulting in strong IONIC attraction.</div>
+                </div>
+            `;
+        }
+        
+        // 3. BF3 (Covalent, Electron Deficient)
+        function renderBF3() {
+            return `
+                <div class="p-relative w-full max-w-sm h-64 flex items-center justify-center mx-auto">
+                    <div class="atom atom-B p-abs" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">B</div>
+
+                    <svg class="p-abs" width="100%" height="100%" viewBox="0 0 350 250" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Lines connecting B to F atoms -->
+                        <line x1="175" y1="125" x2="100" y2="30" stroke="#4c7cff" stroke-width="3" />
+                        <line x1="175" y1="125" x2="250" y2="30" stroke="#4c7cff" stroke-width="3" />
+                        <line x1="175" y1="125" x2="175" y2="220" stroke="#4c7cff" stroke-width="3" />
+                         <text x="175" y="15" font-family="Inter" font-size="14" fill="#4c7cff" font-weight="bold" text-anchor="middle">COVALENT BONDS (120°)</text>
+                    </svg>
+
+                    <!-- F 1 (Top Left) -->
+                    <div class="atom atom-F p-abs bond-covalent" style="top: 15px; left: 85px; border: 2px solid;">F</div>
+                    <!-- F 2 (Top Right) -->
+                    <div class="atom atom-F p-abs bond-covalent" style="top: 15px; right: 85px; border: 2px solid;">F</div>
+                    <!-- F 3 (Bottom) -->
+                    <div class="atom atom-F p-abs bond-covalent" style="bottom: 15px; transform: translateX(-50%); border: 2px solid;">F</div>
+
+                     <div class="text-xs font-bold text-gray-500 absolute -bottom-4">Trigonal Planar Geometry. Boron is Electron Deficient.</div>
+                </div>
+            `;
+        }
+
+        // 4. NH3 (Covalent, Lone Pair)
+        function renderNH3() {
+            return `
+                <div class="p-relative w-40 h-40 flex flex-col items-center justify-center">
+                    <div class="atom atom-N">N</div>
+                    
+                    <!-- Lone Pair (Above N) -->
+                    <div class="p-abs" style="top: 0px; font-size: 1.5rem; color: #4a5568;">
+                        <span class="text-gray-400">•</span><span class="text-gray-400">•</span>
+                        <div class="text-xs font-bold text-gray-500 absolute top-[-15px] w-20 left-1/2 -translate-x-1/2">Lone Pair</div>
+                    </div>
+
+                    <!-- H 1, 2, 3 (Pyramidal effect) -->
+                    <div class="atom atom-H p-abs bond-covalent" style="bottom: 0px; left: 0px; border: 2px solid;">H</div>
+                    <div class="atom atom-H p-abs bond-covalent" style="bottom: 0px; right: 0px; border: 2px solid;">H</div>
+                    <div class="atom atom-H p-abs bond-covalent" style="bottom: -15px; transform: translateX(-50%); border: 2px solid;">H</div>
+                    
+                    <div class="text-xs font-bold text-gray-500 absolute -bottom-10">Trigonal Pyramidal Geometry. Polar molecule.</div>
+                </div>
+            `;
+        }
+
+        // 5. H2O (Covalent, Lone Pairs, Bent)
+        function renderH2O() {
+            return `
+                <div class="p-relative w-40 h-40 flex flex-col items-center justify-center">
+                    <div class="atom atom-O">O</div>
+                    
+                    <!-- Lone Pairs -->
+                    <div class="p-abs" style="top: 10px; left: 10px; font-size: 1.5rem; transform: rotate(-45deg); color: #9f7aea;">
+                        <span class="text-gray-400">•</span><span class="text-gray-400">•</span>
+                    </div>
+                    <div class="p-abs" style="top: 10px; right: 10px; font-size: 1.5rem; transform: rotate(45deg); color: #9f7aea;">
+                        <span class="text-gray-400">•</span><span class="text-gray-400">•</span>
+                    </div>
+
+                    <!-- H 1 (Bottom Left) -->
+                    <div class="atom atom-H p-abs bond-covalent" style="bottom: 10px; left: 10px; border: 2px solid; transform: rotate(15deg) translate(-10px, 10px);">H</div>
+                    <!-- H 2 (Bottom Right) -->
+                    <div class="atom atom-H p-abs bond-covalent" style="bottom: 10px; right: 10px; border: 2px solid; transform: rotate(-15deg) translate(10px, 10px);">H</div>
+                    
+                    <div class="text-xs font-bold text-gray-500 absolute -bottom-8">Bent (V-shape) Geometry. Two lone pairs on Oxygen. Highly Polar.</div>
+                </div>
+            `;
+        }
+
+        // 6. CH4 (Covalent, Tetrahedral)
+        function renderCH4() {
+            return `
+                <div class="p-relative w-40 h-40 flex items-center justify-center">
+                    <div class="atom atom-C">C</div>
+                    
+                    <!-- H 1 (Top) -->
+                    <div class="atom atom-H p-abs bond-covalent" style="top: 0px; transform: translateX(-50%); border: 2px solid;">H</div>
+                    <!-- H 2 (Bottom) -->
+                    <div class="atom atom-H p-abs bond-covalent" style="bottom: 0px; transform: translateX(-50%); border: 2px solid;">H</div>
+                    <!-- H 3 (Left) -->
+                    <div class="atom atom-H p-abs bond-covalent" style="left: 0px; top: 50%; transform: translateY(-50%); border: 2px solid;">H</div>
+                    <!-- H 4 (Right) -->
+                    <div class="atom atom-H p-abs bond-covalent" style="right: 0px; top: 50%; transform: translateY(-50%); border: 2px solid;">H</div>
+
+                    <div class="text-xs font-bold text-gray-500 absolute -bottom-8">Perfect Tetrahedral Geometry ($109.5^\circ$). Non-polar.</div>
+                </div>
+            `;
+        }
+
+        // --- Core Application Logic ---
+
+        function displayCompound(compound) {
+            activeCompound = compound;
+
+            const structureHtml = compound.structureHTML();
+            const legendHtml = renderBondLegend(compound.bonds);
+
+            visualizerArea.innerHTML = `
+                <div class="w-full">
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">${compound.formula}</h2>
+                    <p class="text-lg sm:text-xl text-indigo-600 mb-6">${compound.name}</p>
+
+                    <!-- Legend -->
+                    <div class="flex flex-wrap justify-center gap-3 sm:gap-6 mb-8 p-3 border-b border-gray-200">
+                        ${legendHtml}
+                    </div>
+
+                    <!-- Structure -->
+                    <div class="flex justify-center items-center py-6 h-64 sm:h-80">
+                        ${structureHtml}
+                    </div>
+                </div>
+            `;
+
+            compoundDescription.innerHTML = compound.description;
+
+            // Update button styles
+            document.querySelectorAll('.compound-btn').forEach(btn => {
+                if (btn.dataset.formula === compound.formula) {
+                    btn.classList.add('bg-indigo-600', 'text-white', 'shadow-indigo-500/50', 'scale-105');
+                    btn.classList.remove('bg-indigo-100', 'text-indigo-700', 'hover:bg-indigo-200');
+                } else {
+                    btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-indigo-500/50', 'scale-105');
+                    btn.classList.add('bg-indigo-100', 'text-indigo-700', 'hover:bg-indigo-200');
+                }
+            });
+        }
+
+        function createButtons() {
+            COMPOUNDS_DATA.forEach(compound => {
+                const button = document.createElement('button');
+                button.className = 'compound-btn px-3 py-2 sm:px-4 sm:py-2 rounded-lg font-semibold text-sm sm:text-base transition duration-200 ease-in-out shadow-md hover:shadow-lg transform';
+                button.textContent = compound.formula;
+                button.dataset.formula = compound.formula;
+                button.classList.add('bg-indigo-100', 'text-indigo-700', 'hover:bg-indigo-200');
+
+                button.addEventListener('click', () => displayCompound(compound));
+                buttonContainer.appendChild(button);
+            });
+
+            // Display the first compound on load
+            if (COMPOUNDS_DATA.length > 0) {
+                displayCompound(COMPOUNDS_DATA[0]);
+            }
+        }
+
+        // Initialize the app
+        window.onload = createButtons;
+
+    </script>
+</body>
+</html>
